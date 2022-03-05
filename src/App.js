@@ -9,7 +9,7 @@ import {
 import { Navbar } from './app/Navbar'
 import AddPostForm from './features/posts/AddPostForm'
 
-import PostsLists from './features/posts/PostsLists'
+import PostsList from './features/posts/PostsList'
 import SinglePostPage from './features/posts/SinglePostPage'
 import EditPostForm from './features/posts/EditPostForm'
 
@@ -25,7 +25,7 @@ function App() {
             render={() => (
               <>
                 <AddPostForm />
-                <PostsLists />
+                <PostsList />
               </>
             )}
           />
