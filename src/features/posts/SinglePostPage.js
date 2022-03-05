@@ -2,6 +2,9 @@ import React from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { PostAuthor } from './PostAuthor'
+import { TimeAgo } from './TimeAgo'
+
+import { ReactionButtons } from './ReactionButtons'
 
 // match object contains the URL information we're looking for.
 const SinglePostPage = ({ match }) => {
@@ -23,7 +26,11 @@ const SinglePostPage = ({ match }) => {
           <article className="post">
             <h2>{post.title}</h2>
             <p className="post-content">{post.content}</p>
-            <PostAuthor userId={post.user} />
+            <div>
+              <PostAuthor userId={post.userId} />
+              <TimeAgo timestamp={post.date} />
+            </div>
+            <ReactionButtons post={post} />
             <Link to={`/editPost/${postId}`} className="button">
               Edit Post
             </Link>

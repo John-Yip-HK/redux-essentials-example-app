@@ -1,8 +1,29 @@
 import { createSlice, nanoid } from '@reduxjs/toolkit'
+import { sub } from 'date-fns'
+
+const reactions = {
+  thumbsUp: 0,
+  hooray: 0,
+  heart: 0,
+  rocket: 0,
+  eyes: 0,
+}
 
 const initialState = [
-  { id: '1', title: 'First Post!', content: 'Hello!' },
-  { id: '2', title: 'Second Post', content: 'More text' },
+  {
+    id: '1',
+    title: 'First Post!',
+    content: 'Hello!',
+    date: sub(new Date(), { minutes: 10 }).toISOString(),
+    reactions,
+  },
+  {
+    id: '2',
+    title: 'Second Post',
+    content: 'More text',
+    date: sub(new Date(), { minutes: 5 }).toISOString(),
+    reactions,
+  },
 ]
 
 const postsSlice = createSlice({
@@ -17,9 +38,11 @@ const postsSlice = createSlice({
       prepare: (title, content, userId) => ({
         payload: {
           id: nanoid(),
+          date: new Date().toISOString(),
           title,
           content,
           userId,
+          reactions,
         },
       }),
     },
@@ -32,11 +55,18 @@ const postsSlice = createSlice({
         postToBeEdited.content = content
       }
     },
+    reactionAdded(state, action) {
+      const { postId, reaction } = action.payload
+      const existingPost = state.find((post) => post.id === postId)
+      if (existingPost) {
+        existingPost.reactions[reaction]++
+      }
+    },
   },
 })
 
 // When we write the postAdded reducer function, createSlice will automatically generate an "action creator" function with the same name.
 // We can retrieve the action function in the 'actions' attribute of postSlice slice.
-export const { postAdded, postUpdated } = postsSlice.actions
+export const { postAdded, postUpdated, reactionAdded } = postsSlice.actions
 
 export default postsSlice.reducer
