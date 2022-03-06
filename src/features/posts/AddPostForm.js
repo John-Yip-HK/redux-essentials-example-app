@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { postAdded } from './postsSlice'
+import { addNewPost } from './postsSlice'
 
 const AddPostForm = () => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [userId, setUserId] = useState('')
+  const [addRequestStatus, setAddRequestStatus] = useState('idle')
 
   const dispatch = useDispatch()
 
@@ -15,16 +16,27 @@ const AddPostForm = () => {
   const onContentChanged = (e) => setContent(e.target.value)
   const onAuthorChanged = (e) => setUserId(e.target.value)
 
-  const onSavePostsClicked = () => {
-    if (title && content) {
-      dispatch(postAdded(title, content, userId))
+  const canSave =
+    [title, content, userId].every(Boolean) && addRequestStatus === 'idle'
+
+  const onSavePostsClicked = async () => {
+    if (canSave) {
+      try {
+        // Set status as 'pending' disables the 'Save' button.
+        setAddRequestStatus('pending')
+        // The unwrap() function that returns a new Promise that either has the action.payload value if it is fulfilled, or throws an error if it's the rejected action.
+        // Thus, we can handle the success and failure in the componet using try/catch block.
+        await dispatch(addNewPost({ title, content, user: userId })).unwrap()
+        setTitle('')
+        setContent('')
+        setUserId('')
+      } catch (err) {
+        console.error('Failed to save the post: ', err)
+      } finally {
+        setAddRequestStatus('idle')
+      }
     }
-
-    setTitle('')
-    setContent('')
   }
-
-  const canSave = Boolean(title) && Boolean(content) && Boolean(userId)
 
   const usersOptions = users.map((user) => (
     <option key={user.id} value={user.id}>
