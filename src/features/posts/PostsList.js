@@ -1,15 +1,24 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
+import React, { useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { PostAuthor } from './PostAuthor'
 import { ReactionButtons } from './ReactionButtons'
 import { TimeAgo } from './TimeAgo'
-import { selectAllPosts } from './postsSlice'
+import { selectAllPosts, fetchPosts } from './postsSlice'
 
 // All of the code related to our feed posts feature should go in the posts folder
 
 const PostsList = () => {
+  const dispatch = useDispatch()
   const posts = useSelector(selectAllPosts)
+
+  const postStatus = useSelector((state) => state.posts.status)
+
+  useEffect(() => {
+    if (postStatus === 'idle') {
+      dispatch(fetchPosts())
+    }
+  }, [postStatus, dispatch])
   const orderedPosts = posts
     .slice()
     .sort((a, b) => b.date.localeCompare(a.date))
