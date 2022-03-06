@@ -8,7 +8,7 @@ import { selectAllPosts, fetchPosts } from './postsSlice'
 import { Spinner } from '../../components/Spinner'
 // All of the code related to our feed posts feature should go in the posts folder
 
-const PostExcerpt = ({ post }) => (
+let PostExcerpt = ({ post }) => (
   <article className="post-excerpt" key={post.id}>
     <h3>{post.title}</h3>
     <div>
@@ -23,6 +23,9 @@ const PostExcerpt = ({ post }) => (
     </Link>
   </article>
 )
+
+// By using React.memo, it ensure that the component inside of it only re-renders if the props have actually changed
+PostExcerpt = React.memo(PostExcerpt)
 
 const PostsList = () => {
   const dispatch = useDispatch()
