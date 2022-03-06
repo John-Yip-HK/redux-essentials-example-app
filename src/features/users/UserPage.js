@@ -10,6 +10,7 @@ export const UserPage = ({ match }) => {
 
   const user = useSelector((state) => selectUserById(state, userId))
 
+  // useSelector always return a new array reference -> our component will rerender after every action even if the posts data has not changed.
   const postsForUser = useSelector((state) => {
     const allPosts = selectAllPosts(state)
     return allPosts.filter((post) => post.user === userId)
