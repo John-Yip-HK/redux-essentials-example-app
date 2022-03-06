@@ -1,19 +1,19 @@
-import { createSlice, createSelector, createAsyncThunk } from '@reduxjs/toolkit'
+import {
+  createSlice,
+  createSelector,
+  createAsyncThunk,
+  createEntityAdapter,
+} from '@reduxjs/toolkit'
 import { client } from '../../api/client'
 
-const reactions = {
-  thumbsUp: 0,
-  hooray: 0,
-  heart: 0,
-  rocket: 0,
-  eyes: 0,
-}
+const postsAdapter = createEntityAdapter({
+  sortComparer: (a, b) => b.date.localeCompare(a.date),
+})
 
-const initialState = {
-  posts: [],
+const initialState = postsAdapter.getInitialState({
   status: 'idle',
   error: null,
-}
+})
 
 /**
  * createAsyncThunk accepts two arguments:
@@ -42,7 +42,7 @@ const postsSlice = createSlice({
   reducers: {
     postUpdated: (state, action) => {
       const { id, title, content } = action.payload
-      const postToBeEdited = state.posts.find((post) => post.id === id)
+      const postToBeEdited = state.entities[id]
 
       if (postToBeEdited) {
         postToBeEdited.title = title
@@ -51,7 +51,7 @@ const postsSlice = createSlice({
     },
     reactionAdded(state, action) {
       const { postId, reaction } = action.payload
-      const existingPost = state.posts.find((post) => post.id === postId)
+      const existingPost = state.entities[postId]
       if (existingPost) {
         existingPost.reactions[reaction]++
       }
@@ -64,25 +64,21 @@ const postsSlice = createSlice({
       })
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.status = 'succeeded'
-        state.posts = state.posts.concat(action.payload)
+        postsAdapter.upsertMany(state, action.payload)
       })
       .addCase(fetchPosts.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message
       })
-      .addCase(addNewPost.fulfilled, (state, action) => {
-        state.posts.push(action.payload)
-      })
+      .addCase(addNewPost.fulfilled, postsAdapter.addOne)
   },
 })
 
-// Prevent from rewriting component every time we update the state format.
-// Define our selector function inside our slice file.
-// 'state' parameter = root Redux state object.
-export const selectAllPosts = (state) => state.posts.posts
-export const selectPostById = (state, postId) =>
-  state.posts.posts.find((post) => post.id === postId)
-
+export const {
+  selectAll: selectAllPosts,
+  selectById: selectPostById,
+  selectIds: selectPostIds,
+} = postsAdapter.getSelectors((state) => state.posts)
 // The createSelector creates memoizes selectors that will only recalculate result when the inputs change.
 // createSelector takes one or more "input selector" functions as argument, plus an "output selector" function. Whatever those input selectors return becomes the arguments for the output selector.
 export const selectPostsByUser = createSelector(
