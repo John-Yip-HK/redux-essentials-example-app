@@ -65,6 +65,13 @@ const postsSlice = createSlice({
   },
 })
 
+// Prevent from rewriting component every time we update the state format.
+// Define our selector function inside our slice file.
+// 'state' parameter = root Redux state object.
+export const selectAllPosts = (state) => state.posts
+export const selectPostById = (state, postId) =>
+  state.posts.find((post) => post.id === postId)
+
 // When we write the postAdded reducer function, createSlice will automatically generate an "action creator" function with the same name.
 // We can retrieve the action function in the 'actions' attribute of postSlice slice.
 export const { postAdded, postUpdated, reactionAdded } = postsSlice.actions

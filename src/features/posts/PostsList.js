@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom'
 import { PostAuthor } from './PostAuthor'
 import { ReactionButtons } from './ReactionButtons'
 import { TimeAgo } from './TimeAgo'
+import { selectAllPosts } from './postsSlice'
 
 // All of the code related to our feed posts feature should go in the posts folder
 
 const PostsList = () => {
-  const posts = useSelector((state) => state.posts)
+  const posts = useSelector(selectAllPosts)
   const orderedPosts = posts
     .slice()
     .sort((a, b) => b.date.localeCompare(a.date))
