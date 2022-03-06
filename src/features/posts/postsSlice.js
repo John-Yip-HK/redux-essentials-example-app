@@ -1,4 +1,4 @@
-import { createSlice, nanoid, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createSelector, createAsyncThunk } from '@reduxjs/toolkit'
 import { client } from '../../api/client'
 
 const reactions = {
@@ -82,6 +82,13 @@ const postsSlice = createSlice({
 export const selectAllPosts = (state) => state.posts.posts
 export const selectPostById = (state, postId) =>
   state.posts.posts.find((post) => post.id === postId)
+
+// The createSelector creates memoizes selectors that will only recalculate result when the inputs change.
+// createSelector takes one or more "input selector" functions as argument, plus an "output selector" function. Whatever those input selectors return becomes the arguments for the output selector.
+export const selectPostsByUser = createSelector(
+  [selectAllPosts, (state, userId) => userId],
+  (posts, userId) => posts.filter((post) => post.user === userId)
+)
 
 // When we write the postAdded reducer function, createSlice will automatically generate an "action creator" function with the same name.
 // We can retrieve the action function in the 'actions' attribute of postSlice slice.
