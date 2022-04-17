@@ -82,7 +82,7 @@ const PostsList = () => {
   return (
     <section className="posts-list">
       <h2>Posts</h2>
-      <button onClick={refetch}>Refeth Posts</button>
+      <button onClick={refetch}>Refetch Posts</button>
       {content}
     </section>
   )
