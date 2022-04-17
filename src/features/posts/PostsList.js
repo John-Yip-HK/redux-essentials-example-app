@@ -4,6 +4,7 @@ import { PostAuthor } from './PostAuthor'
 import { ReactionButtons } from './ReactionButtons'
 import { TimeAgo } from './TimeAgo'
 import { Spinner } from '../../components/Spinner'
+import classnames from 'classnames'
 // All of the code related to our feed posts feature should go in the posts folder
 
 // The useGetPostsQuery replaces all of useSelector, useDispatch and useEffect in one go!
@@ -45,8 +46,10 @@ const PostsList = () => {
     data: posts = [],
     isLoading,
     isSuccess,
+    isFetching,
     isError,
     error,
+    refetch, // A function that force a refetch
   } = useGetPostsQuery()
 
   // Use memo to avoid re-sorting on every rerender.
@@ -62,9 +65,16 @@ const PostsList = () => {
   if (isLoading) {
     content = <Spinner text="loading..." />
   } else if (isSuccess) {
-    content = sortedPosts.map((post) => (
+    const renderedPosts = sortedPosts.map((post) => (
       <PostExcerpt key={post.id} post={post} />
     ))
+
+    // Make the existing list of items partially transparent to indicate the data is stale (not most updated), but keep them visible wile the refetch is happening.
+    const containerClassname = classnames('posts-container', {
+      disabled: isFetching,
+    })
+
+    content = <div className={containerClassname}>{renderedPosts}</div>
   } else if (isError) {
     content = <div>{error}</div>
   }
@@ -72,6 +82,7 @@ const PostsList = () => {
   return (
     <section className="posts-list">
       <h2>Posts</h2>
+      <button onClick={refetch}>Refeth Posts</button>
       {content}
     </section>
   )
