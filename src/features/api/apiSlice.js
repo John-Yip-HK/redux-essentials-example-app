@@ -23,11 +23,19 @@ export const apiSlice = createApi({
       // The URL for the request is '/fakeApi/posts'
       // You can return an object to override the expected GET request like {url: '/posts', method: 'POST', body: newPost}.
       query: () => '/posts',
-      providesTags: ['Post'], // For query endpoints. A set of tags describing the data in that query.
+      // RTK Query lets us define specific tags, which let us be more selective in invalidating data. These specific tags look like {type: 'Post', id: 123}.
+      providesTags: (result = [], error, arg) => [
+        'Post',
+        ...result.map(({ id }) => ({ type: 'Post', id })),
+      ], // It can also receive a callback that accepts result and arg parameters and returns an array.
     }),
     // Get a single post based on post id.
     getPost: builder.query({
       query: (postId) => `/posts/${postId}`,
+      providesTags: (result, error, arg) => [
+        { type: 'Post', id: arg },
+        { type: 'Post', id: 'LIST' },
+      ],
     }),
     addNewPost: builder.mutation({
       // Our query option now returns an object containing {url, method, body}.
@@ -46,6 +54,8 @@ export const apiSlice = createApi({
         method: 'PATCH',
         body: post,
       }),
+      // This will force a refetch of both individual post from getPost and the entire list of posts from getPosts because they both provide a tag that matches the {type, id} tag.
+      invalidatesTags: (result, error, arg) => [{ type: 'Post', id: arg.id }],
     }),
   }),
 })
