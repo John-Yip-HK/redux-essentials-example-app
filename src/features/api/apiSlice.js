@@ -39,11 +39,23 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['Post'], // For mutation endpoints. A set of tags that are invalidated every time that mutation runs.
     }),
+    // Use PATCH request to indicate that it's updating some of the fields.
+    editPost: builder.mutation({
+      query: (post) => ({
+        url: `/posts/${post.id}`,
+        method: 'PATCH',
+        body: post,
+      }),
+    }),
   }),
 })
 
 // Export the auto-generated hook for the `getPosts` query endpoint (for every endpoint we define)
 // Hook names are generated in this way: get[endpoint-name-first-letter-capitalized]Query.
 // Remember endpoint hook only accepts one parameter. If need to pass multiple parameters, use an object instead. RTK will check fields in a "shallow stable" comparison to decide if a new fetch needs to be invoked.
-export const { useGetPostsQuery, useGetPostQuery, useAddNewPostMutation } =
-  apiSlice
+export const {
+  useGetPostsQuery,
+  useGetPostQuery,
+  useAddNewPostMutation,
+  useEditPostMutation,
+} = apiSlice
