@@ -28,4 +28,5 @@ export const apiSlice = createApi({
 
 // Export the auto-generated hook for the `getPosts` query endpoint (for every endpoint we define)
 // Hook names are generated in this way: get[endpoint-name-first-letter-capitalized]Query.
+// Remember endpoint hook only accepts one parameter. If need to pass multiple parameters, use an object instead. RTK will check fields in a "shallow stable" comparison to decide if a new fetch needs to be invoked.
 export const { useGetPostsQuery, useGetPostQuery } = apiSlice
