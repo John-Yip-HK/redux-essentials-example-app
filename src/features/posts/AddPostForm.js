@@ -1,15 +1,17 @@
 import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
+import { useAddNewPostMutation } from '../api/apiSlice'
 import { selectAllUsers } from '../users/usersSlice'
-import { addNewPost } from './postsSlice'
 
 const AddPostForm = () => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [userId, setUserId] = useState('')
-  const [addRequestStatus, setAddRequestStatus] = useState('idle')
 
-  const dispatch = useDispatch()
+  // Mutation hook returns an array of 2 values:
+  // 1. The trigger function that makes the request to the server when invoked with any argument.
+  // 2. An object with metadata about the current in-progress request. An isLoading flag is included to indicate if a request is in-progress.
+  const [addNewPost, { isLoading }] = useAddNewPostMutation()
 
   const users = useSelector((state) => selectAllUsers(state))
 
@@ -17,24 +19,19 @@ const AddPostForm = () => {
   const onContentChanged = (e) => setContent(e.target.value)
   const onAuthorChanged = (e) => setUserId(e.target.value)
 
-  const canSave =
-    [title, content, userId].every(Boolean) && addRequestStatus === 'idle'
+  const canSave = [title, content, userId].every(Boolean) && !isLoading
 
   const onSavePostsClicked = async () => {
     if (canSave) {
       try {
-        // Set status as 'pending' disables the 'Save' button.
-        setAddRequestStatus('pending')
         // The unwrap() function that returns a new Promise that either has the action.payload value if it is fulfilled, or throws an error if it's the rejected action.
         // Thus, we can handle the success and failure in the componet using try/catch block.
-        await dispatch(addNewPost({ title, content, user: userId })).unwrap()
+        addNewPost({ title, content, user: userId }).unwrap()
         setTitle('')
         setContent('')
         setUserId('')
       } catch (err) {
         console.error('Failed to save the post: ', err)
-      } finally {
-        setAddRequestStatus('idle')
       }
     }
   }
