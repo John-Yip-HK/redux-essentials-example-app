@@ -1,15 +1,8 @@
-import React, { useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { PostAuthor } from './PostAuthor'
 import { ReactionButtons } from './ReactionButtons'
 import { TimeAgo } from './TimeAgo'
-import {
-  selectAllPosts,
-  fetchPosts,
-  selectPostIds,
-  selectPostById,
-} from './postsSlice'
 import { Spinner } from '../../components/Spinner'
 // All of the code related to our feed posts feature should go in the posts folder
 
@@ -49,31 +42,29 @@ const PostsList = () => {
    * 6. error: a serialized error object
    */
   const {
-    data: posts,
+    data: posts = [],
     isLoading,
     isSuccess,
     isError,
     error,
   } = useGetPostsQuery()
 
-  // const dispatch = useDispatch()
-  // const orderedPosts = useSelector(selectPostIds)
-
-  // const postStatus = useSelector((state) => state.posts.status)
-  // const error = useSelector((state) => state.posts.error)
-
-  // useEffect(() => {
-  //   if (postStatus === 'idle') {
-  //     dispatch(fetchPosts())
-  //   }
-  // }, [postStatus, dispatch])
+  // Use memo to avoid re-sorting on every rerender.
+  const sortedPosts = useMemo(() => {
+    const sortedPosts = posts.slice()
+    // Sort posts in descending chronological order.
+    sortedPosts.sort((a, b) => b.date.localeCompare(a.date))
+    return sortedPosts
+  }, [posts])
 
   let content
 
   if (isLoading) {
     content = <Spinner text="loading..." />
   } else if (isSuccess) {
-    content = posts.map((post) => <PostExcerpt key={post.id} post={post} />)
+    content = sortedPosts.map((post) => (
+      <PostExcerpt key={post.id} post={post} />
+    ))
   } else if (isError) {
     content = <div>{error}</div>
   }
