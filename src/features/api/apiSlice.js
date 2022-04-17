@@ -19,8 +19,13 @@ export const apiSlice = createApi({
       // You can return an object to override the expected GET request like {url: '/posts', method: 'POST', body: newPost}.
       query: () => '/posts',
     }),
+    // Get a single post based on post id.
+    getPost: builder.query({
+      query: (postId) => `/posts/${postId}`,
+    }),
   }),
 })
 
 // Export the auto-generated hook for the `getPosts` query endpoint (for every endpoint we define)
-export const { useGetPostsQuery } = apiSlice
+// Hook names are generated in this way: get[endpoint-name-first-letter-capitalized]Query.
+export const { useGetPostsQuery, useGetPostQuery } = apiSlice
