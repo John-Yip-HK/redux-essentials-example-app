@@ -23,10 +23,20 @@ export const apiSlice = createApi({
     getPost: builder.query({
       query: (postId) => `/posts/${postId}`,
     }),
+    addNewPost: builder.mutation({
+      // Our query option now returns an object containing {url, method, body}.
+      query: (initialPost) => ({
+        url: '/posts',
+        method: 'POST',
+        // Include the entire post object as the body of the request. This object will be JSON-serialized automatically.
+        body: initialPost,
+      }),
+    }),
   }),
 })
 
 // Export the auto-generated hook for the `getPosts` query endpoint (for every endpoint we define)
 // Hook names are generated in this way: get[endpoint-name-first-letter-capitalized]Query.
 // Remember endpoint hook only accepts one parameter. If need to pass multiple parameters, use an object instead. RTK will check fields in a "shallow stable" comparison to decide if a new fetch needs to be invoked.
-export const { useGetPostsQuery, useGetPostQuery } = apiSlice
+export const { useGetPostsQuery, useGetPostQuery, useAddNewPostMutation } =
+  apiSlice
