@@ -13,9 +13,11 @@ import {
 import { Spinner } from '../../components/Spinner'
 // All of the code related to our feed posts feature should go in the posts folder
 
-let PostExcerpt = ({ postId }) => {
-  const post = useSelector((state) => selectPostById(state, postId))
+// The useGetPostsQuery replaces all of useSelector, useDispatch and useEffect in one go!
+import { useGetPostsQuery } from '../api/apiSlice'
 
+// We can directly pass a post into the PostExcerpt element now.
+let PostExcerpt = ({ post }) => {
   return (
     <article className="post-excerpt" key={post.id}>
       <h3>{post.title}</h3>
@@ -37,27 +39,42 @@ let PostExcerpt = ({ postId }) => {
 PostExcerpt = React.memo(PostExcerpt)
 
 const PostsList = () => {
-  const dispatch = useDispatch()
-  const orderedPosts = useSelector(selectPostIds)
+  /**
+   * Structure of the useGetPostsQuery result:
+   * 1. data: the actual response from the server. This field will be undefined until the result is received from the server.
+   * 2. isLoading: a boolean value indicating if the hook is currently making the first request to the server.
+   * 3. isFetching: a boolean indicating if the hook is currently making any request to the server.
+   * 4. isSuccess: a boolean indicating if the hook has made a successful request and has cached data available (data should be defined now)
+   * 5. isError: a boolean indicating if the last request had an error.
+   * 6. error: a serialized error object
+   */
+  const {
+    data: posts,
+    isLoading,
+    isSuccess,
+    isError,
+    error,
+  } = useGetPostsQuery()
 
-  const postStatus = useSelector((state) => state.posts.status)
-  const error = useSelector((state) => state.posts.error)
+  // const dispatch = useDispatch()
+  // const orderedPosts = useSelector(selectPostIds)
 
-  useEffect(() => {
-    if (postStatus === 'idle') {
-      dispatch(fetchPosts())
-    }
-  }, [postStatus, dispatch])
+  // const postStatus = useSelector((state) => state.posts.status)
+  // const error = useSelector((state) => state.posts.error)
+
+  // useEffect(() => {
+  //   if (postStatus === 'idle') {
+  //     dispatch(fetchPosts())
+  //   }
+  // }, [postStatus, dispatch])
 
   let content
 
-  if (postStatus === 'loading') {
+  if (isLoading) {
     content = <Spinner text="loading..." />
-  } else if (postStatus === 'succeeded') {
-    content = orderedPosts.map((postId) => (
-      <PostExcerpt key={postId} postId={postId} />
-    ))
-  } else if (postStatus === 'failed') {
+  } else if (isSuccess) {
+    content = posts.map((post) => <PostExcerpt key={post.id} post={post} />)
+  } else if (isError) {
     content = <div>{error}</div>
   }
 
