@@ -63,9 +63,33 @@ export const apiSlice = createApi({
         method: 'POST',
         body: { reaction },
       }),
-      invalidatesTags: (result, error, args) => [
-        { type: 'Post', id: args.postId },
-      ],
+
+      // We removed the invalidatesTags line we'd just added, since we don't want to refetch the posts when we click a reaction button.
+
+      // Optimistic update: just updating the already-cached data on the client to match what we expect to have happen on the server. Instant feedback to the user when the button is clicked is possible.
+      // onQueryStarted(<user-passed-arguments>, {dispatch, getState, extra, requestId, queryFulfilled})
+      // queryFulfilled is a Promise that will resolve when the request returns, and either fulfill or reject based on the request.
+      async onQueryStarted({ postId, reaction }, { dispatch, queryFulfilled }) {
+        // `updateQueryData` is a function that updates the cached data and requires the endpoint name and cache key arguments,
+        // so it knows which piece of cache state to update
+        // patchResult is the return value dispatching the action object returned by updateQueryData.
+        const patchResult = dispatch(
+          apiSlice.util.updateQueryData('getPosts', undefined, (draft) => {
+            // The `draft` is Immer-wrapped and can be "mutated" like in createSlice
+            const post = draft.find((post) => post.id === postId)
+            if (post) {
+              post.reactions[reaction]++
+            }
+          })
+        )
+        try {
+          // We await the queryFulfilled in case the promise is regected.
+          await queryFulfilled
+        } catch {
+          // patchResult.undo() will automatically dispatches an action that reverses the patch diff changes.
+          patchResult.undo()
+        }
+      },
     }),
   }),
 })
