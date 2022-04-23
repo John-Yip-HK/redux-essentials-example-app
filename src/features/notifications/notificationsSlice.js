@@ -1,14 +1,21 @@
 import {
+  createAction,
   createSlice,
   createAsyncThunk,
   createEntityAdapter,
   createSelector,
+  isAnyOf,
 } from '@reduxjs/toolkit'
 
 import { client } from '../../api/client'
 
 import { forceGenerateNotifications } from '../../api/server'
 import { apiSlice } from '../api/apiSlice'
+
+// Define a new action type specifically for the "received some notifications" case, and dispatch that action after updating the cache state.
+const notificationsReceived = createAction(
+  'notifications/notificationsReceived'
+)
 
 export const extendedApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -17,7 +24,7 @@ export const extendedApi = apiSlice.injectEndpoints({
       // implement "streaming updates" to cached data using onCacheEntryAdded
       async onCacheEntryAdded(
         arg, // cache keys
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved } // updateCachedData util function, and two lifecycle Promises cacheDataLoaded and cacheEntryRemoved.
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch } // updateCachedData util function, and two lifecycle Promises cacheDataLoaded and cacheEntryRemoved.
       ) {
         // create a websocket connection when the cache subscription starts
         const ws = new WebSocket('ws://localhost')
@@ -38,6 +45,8 @@ export const extendedApi = apiSlice.injectEndpoints({
                   draft.push(...message.payload)
                   draft.sort((a, b) => b.date.localeCompare(a.date))
                 })
+                // Dispatch an additional action so we can track "read" state
+                dispatch(notificationsReceived(message.payload))
                 break
               }
               default:
@@ -80,22 +89,13 @@ export const fetchNotificationsWebsocket = () => (dispatch, getState) => {
   forceGenerateNotifications(latestTimestamp)
 }
 
-const notificationsAdapter = createEntityAdapter({
-  sortComparer: (a, b) => b.date.localeCompare(a.date),
-})
-// For the payload creator, the first argument of the callback is the argument developers passed in.
-// The second one is a thunkAPI object with some useful functions and information. getState allows developers to retrieve state of this slice.
-export const fetchNotifications = createAsyncThunk(
-  'notifications/fetchNotifications',
-  async (_, { getState }) => {
-    const allNotifications = selectAllNotifications(getState())
-    const [latestNotification] = allNotifications
-    const latestTimestamp = latestNotification ? latestNotification.date : ''
-    const response = await client.get(
-      `/fakeApi/notifications?since=${latestTimestamp}`
-    )
-    return response.data
-  }
+// store "metadata" objects that describe the read/unread status.
+const notificationsAdapter = createEntityAdapter()
+
+// return true if the current action matches either of those types.
+const matchNotificationsReceived = isAnyOf(
+  notificationsReceived,
+  extendedApi.endpoints.getNotifications.matchFulfilled
 )
 
 const notificationsSlice = createSlice({
@@ -108,14 +108,22 @@ const notificationsSlice = createSlice({
       })
     },
   },
-  extraReducers: {
-    [fetchNotifications.fulfilled]: (state, action) => {
-      notificationsAdapter.upsertMany(state, action.payload)
+  extraReducers(builder) {
+    builder.addMatcher(matchNotificationsReceived, (state, action) => {
+      // Add client-side metadata for tracking new notifications
+      const notificationsMetadata = action.payload.map((notification) => ({
+        id: notification.id,
+        read: false,
+        isNew: true,
+      }))
+
       Object.values(state.entities).forEach((notification) => {
         // Any notifications we've read are no longer new
         notification.isNew = !notification.read
       })
-    },
+
+      notificationsAdapter.upsertMany(state, notificationsMetadata)
+    })
   },
 })
 
@@ -123,5 +131,7 @@ export const { allNotificationsRead } = notificationsSlice.actions
 
 export default notificationsSlice.reducer
 
-export const { selectAll: selectAllNotifications } =
-  notificationsAdapter.getSelectors((state) => state.notifications)
+export const {
+  selectAll: selectNotificationsMetadata,
+  selectEntities: selectMetadataEntities, // returns the lookup table object itself
+} = notificationsAdapter.getSelectors((state) => state.notifications)
