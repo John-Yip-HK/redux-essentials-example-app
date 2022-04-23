@@ -8,7 +8,7 @@ import { Provider } from 'react-redux'
 import { worker } from './api/server'
 import { fetchUsers } from './features/users/usersSlice'
 
-import { apiSlice } from './features/api/apiSlice'
+import { getUsersEndpoint } from './features/users/usersSlice'
 
 // Wrap app rendering so we can wait for the mock API to initialize
 async function start() {
@@ -17,7 +17,7 @@ async function start() {
 
   // We only want to fetch the list of users once, and we want to do it right when the app starts.
   // This time we do the fetching with RTK query.
-  store.dispatch(apiSlice.endpoints.getUsers.initiate())
+  store.dispatch(getUsersEndpoint.initiate())
 
   ReactDOM.render(
     <React.StrictMode>

@@ -12,11 +12,23 @@ import { apiSlice } from '../api/apiSlice'
 
 // const initialState = usersAdapter.getInitialState()
 
+const extendedApiSlice = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getUsers: builder.query({
+      query: () => '/users',
+    }),
+  }),
+})
+
 // Calling `someEndpoint.select(someArg)` generates a new selector that will return
 // the query result object for a query with those parameters.
 // To generate a selector for a specific query argument, call `select(theQueryArg)`.
 // In this case, the users query has no params, so we don't pass anything to select()
-export const selectUsersResult = apiSlice.endpoints.getUsers.select()
+
+// We only export the getUsers endpoint only (alternative option).
+export const getUsersEndpoint = apiSlice.endpoints.getUsers
+export const selectUsersResult = getUsersEndpoint.select()
+export const { useGetUsersQuery } = extendedApiSlice
 
 const emptyUsers = []
 
