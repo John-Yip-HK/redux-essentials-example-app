@@ -57,6 +57,16 @@ export const apiSlice = createApi({
       // This will force a refetch of both individual post from getPost and the entire list of posts from getPosts because they both provide a tag that matches the {type, id} tag.
       invalidatesTags: (result, error, arg) => [{ type: 'Post', id: arg.id }],
     }),
+    addReaction: builder.mutation({
+      query: ({ postId, reaction }) => ({
+        url: `/posts/${postId}/reactions`,
+        method: 'POST',
+        body: { reaction },
+      }),
+      invalidatesTags: (result, error, args) => [
+        { type: 'Post', id: args.postId },
+      ],
+    }),
   }),
 })
 
@@ -68,4 +78,5 @@ export const {
   useGetPostQuery,
   useAddNewPostMutation,
   useEditPostMutation,
+  useAddReactionMutation,
 } = apiSlice
