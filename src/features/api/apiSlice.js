@@ -83,7 +83,7 @@ export const apiSlice = createApi({
           })
         )
         try {
-          // We await the queryFulfilled in case the promise is regected.
+          // We await the queryFulfilled in case the promise is rejected.
           await queryFulfilled
         } catch {
           // patchResult.undo() will automatically dispatches an action that reverses the patch diff changes.
